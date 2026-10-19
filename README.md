@@ -44,7 +44,7 @@ Approved desktop: `libfile_2e779dec10f881919371cfda01aa804f`; mobile: `libfile_3
 
 ## Shared backend
 
-No backend has been provisioned, deployed or claimed. See [the contract](docs/backend-contract.md) for the required endpoints, persistent storage, atomic collision validation, moderation, rate limiting and owner recovery. `VITE_GUESTBOOK_API=/api` selects the same-origin HTTP adapter. An API failure never switches to sample data. Browser checks are defense in depth; the server must repeat all validation. Health capability flags cannot replace server acceptance tests.
+No backend has been provisioned, deployed or claimed. Sites supports D1 persistence, optional R2 photo storage and ChatGPT sign-in for durable ownership; a separate external service is not necessary. See [the Sites assessment](docs/sites-backend.md) and [the contract](docs/backend-contract.md) for the implementation and approval work remaining. `VITE_GUESTBOOK_API=/api` selects the same-origin HTTP adapter. An API failure never switches to sample data. Browser checks are defense in depth; the server must repeat all validation. Health capability flags cannot replace server acceptance tests.
 
 ## Event-card imports
 
@@ -52,7 +52,7 @@ No backend has been provisioned, deployed or claimed. See [the contract](docs/ba
 
 ## Sites compatibility
 
-`npm run build` emits static `dist/`, suitable for the supported Sites static packaging workflow. The Vite dev script accepts required host/port flags. No Site has been registered, no hosting manifest identity has been invented, and nothing has been deployed. Future hosting must use the Sites skill and a returned project ID; a shared backend requires separately approved infrastructure. Static hosting alone does not provide a persistent guestbook.
+`npm run build` emits static `dist/`, suitable for the supported Sites static packaging workflow. The Vite dev script accepts required host/port flags. No Site has been registered, no hosting manifest identity has been invented, and nothing has been deployed. Future hosting must use the Sites skill and a returned project ID. Shared behavior can use Sites' supported Vinext/D1/identity workflow after local server implementation and the needed provisioning/deployment approval. Static hosting alone does not provide a persistent guestbook.
 
 ## Specification gap
 

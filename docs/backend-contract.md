@@ -1,6 +1,6 @@
 # Backend contract — not yet implemented
 
-The current repository contains a frontend adapter, not a server. Shared persistence, server rate limiting, moderation, reports and durable ownership are **blocked** until approved backend infrastructure and its credentials are supplied. Do not put service credentials in Vite environment variables or browser bundles.
+The current repository contains a frontend adapter, not a server. Shared persistence, server rate limiting, moderation, reports and durable ownership are **not implemented**. Sites provides a supported implementation path using D1 and dispatch-owned ChatGPT sign-in; a separate external backend or identity provider is not required. Implement and test the server before enabling public mode, then obtain the needed approval before provisioning/deployment. No hosted resources have been created. Do not put service credentials in Vite environment variables or browser bundles. See [the Sites backend assessment](sites-backend.md).
 
 ## JSON API, same origin
 
