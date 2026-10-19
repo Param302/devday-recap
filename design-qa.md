@@ -33,3 +33,7 @@ No full-view or focused-region source/implementation comparison could be made; d
 4. Open source and latest screenshots together at normalized matching viewports; inspect the five surfaces above and the editor states; correct P0/P1/P2 differences and repeat.
 
 Cloud browser tooling is not exposed in this task. Local installed Chromium provides automated browser evidence; cloud-browser preview and formal source-to-build comparison remain unverified.
+
+## Backend milestone evidence (does not change visual result)
+
+Nine browser tests now pass, including shared-mode pending/private/approved behavior against local D1 through a test transport. `evidence/private-pending-test.png` records a synthetic private pending signature at 1100 × 950, density 1. This verifies application interaction states; it does not verify hosted ChatGPT sign-in, original artwork or source-to-build fidelity. The source-image blocker remains, so final result remains blocked.

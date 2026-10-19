@@ -24,4 +24,4 @@ Suggested import sequence after photos arrive:
 5. Verify consent for public names/socials and confirm placement avoids fixed artwork. Preserve original provenance even if a transcription is corrected.
 6. Publish approved records through the backend's reviewed import path, rejecting `demo` and all unreviewed candidates.
 
-No automated importer is included. Public display of original photographs, OCR services and image storage need a separate approved implementation once sources and infrastructure exist.
+The backend includes organizer-only source-registration and pending-candidate endpoints. Registration verifies an existing private R2 PNG/JPEG against its actual SHA-256 and preserves each physical card/page pair. Import approval requires transcription/consent confirmations and rechecks original bytes. No automated OCR, photo upload endpoint, public photo display or actual attendee import is included. No real photos/attendees have been registered. Future storage use still needs approved provisioning and original sources.

@@ -20,6 +20,8 @@ export type Provenance = {
   review: "not-required" | "pending" | "approved" | "rejected";
 };
 export type Signature = {
+  version?: number;
+  status?: "pending" | "public" | "rejected";
   id: string;
   pageId: string;
   name: string;

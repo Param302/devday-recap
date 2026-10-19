@@ -86,6 +86,7 @@ test("demo is removable, session-owned, rate limited and isolated from other ins
   const first = await a.load();
   const d = { ...draft, pageId: first.pages[2].id };
   const receipt = await a.publish(d, "key");
+  assert.ok(receipt.ownerToken);
   assert.equal(receipt.signature.pageId, first.pages[2].id);
   assert.equal(receipt.signature.visibility, "demo");
   assert.deepEqual(await a.publish(d, "key"), receipt);

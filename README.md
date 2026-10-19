@@ -2,7 +2,7 @@
 
 A DevDay Community DelhiNCR signature tent card. React + TypeScript + Vite, self-hosted handwriting fonts, and DOM/CSS rotation about the top binding. No heavy 3D runtime.
 
-**Status: implementation in progress, not ready for public release.** The exact PDF and approval mockups resolve in Library, but this execution environment's proxy refuses their download hosts (HTTP 403). The UI explicitly shows the unavailable artwork instead of recreating it. No original attendee signatures have been imported. No persistent backend or service credentials exist in this repository.
+**Status: implementation in progress, not ready for public release.** The exact PDF and approval mockups resolve in Library, but this execution environment's proxy refuses their download hosts (HTTP 403). The UI explicitly shows the unavailable artwork instead of recreating it. No original attendee signatures have been imported. A D1 application backend is implemented and locally tested; canonical Sites runtime/auth integration and hosted provisioning remain pending.
 
 ## Run
 
@@ -13,6 +13,8 @@ npm ci
 npm run dev -- --host 0.0.0.0 --port 4173 --strictPort
 npm test
 npm run test:browser
+npm run check:server
+npm run test:server
 npm run build
 ```
 
@@ -23,7 +25,7 @@ The default is a visibly labeled **in-memory demo**. Refreshing discards additio
 - Browse one portrait page with top rings and up/down controls; a page rotates vertically around its top edge. Reduced motion switches pages without rotation. Card touch behavior preserves vertical scrolling; no swipe interception.
 - Add yours starts on the current page. Tap or use arrow keys to choose a normalized position, then Enter or Use this spot opens the editor. Shift + arrow moves faster.
 - Pick Caveat, Dancing Script or Kalam, one of four inks, and up to two safe HTTPS profile links. Confirm the visibility notice, preview on the same page, then explicitly add to the demo or publish through a configured backend.
-- Search names/handles across pages, open signature links, report a concern, edit/remove session-owned additions. Demo reports send nothing. The demo's local rate limit is a UX simulation, not abuse protection.
+- Search names/handles, open profile links, report a concern and edit/remove additions. Demo ownership is session-only and demo reports send nothing. The shared adapter uses authenticated ChatGPT ownership, separates private pending records and provides Your signatures for later management. D1 implements persistent account/global quotas.
 - Mobile uses a near-full-width card, fixed Add yours CTA and a native dialog styled as a bottom sheet. Dialog focus/escape behavior is provided by the browser.
 
 ## Original artwork
@@ -44,7 +46,9 @@ Approved desktop: `libfile_2e779dec10f881919371cfda01aa804f`; mobile: `libfile_3
 
 ## Shared backend
 
-No backend has been provisioned, deployed or claimed. Sites supports D1 persistence, optional R2 photo storage and ChatGPT sign-in for durable ownership; a separate external service is not necessary. See [the Sites assessment](docs/sites-backend.md) and [the contract](docs/backend-contract.md) for the implementation and approval work remaining. `VITE_GUESTBOOK_API=/api` selects the same-origin HTTP adapter. An API failure never switches to sample data. Browser checks are defense in depth; the server must repeat all validation. Health capability flags cannot replace server acceptance tests.
+The D1 backend in `server/api.ts` is locally tested for persistence, atomic reservations, validation, moderation/reports, identity ownership, idempotency and quotas. New submissions and edits require organizer review. `server/sites.ts` binds it to the official identity helper functions supplied by a canonical Sites server route. That integration is **blocked** because required official starter/helper source files are unavailable through this environment's skill resource interface. No alternative authentication stack or fake platform API was created.
+
+Sites supports D1, optional R2 and ChatGPT sign-in; no separate external service is necessary. See [deployment configuration](docs/sites-backend.md) and [the API contract](docs/backend-contract.md). `VITE_GUESTBOOK_API=/api` selects the shared adapter after runtime integration. API failures never switch to fixtures. Nothing has been provisioned or deployed.
 
 ## Event-card imports
 

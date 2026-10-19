@@ -1,39 +1,51 @@
-# Backend contract — not yet implemented
+# Application backend contract
 
-The current repository contains a frontend adapter, not a server. Shared persistence, server rate limiting, moderation, reports and durable ownership are **not implemented**. Sites provides a supported implementation path using D1 and dispatch-owned ChatGPT sign-in; a separate external backend or identity provider is not required. Implement and test the server before enabling public mode, then obtain the needed approval before provisioning/deployment. No hosted resources have been created. Do not put service credentials in Vite environment variables or browser bundles. See [the Sites backend assessment](sites-backend.md).
+The application API in `server/api.ts` is implemented against Cloudflare D1 and locally tested using Miniflare D1/R2. `server/sites.ts` composes it with the official Sites identity helpers supplied by a server route. **Canonical Sites runtime/auth integration remains blocked:** the official starter/helper source files are unavailable through the current skill resource interface. No Site, hosted resources or deployment exists.
 
-## JSON API, same origin
+The default UI remains an explicit in-memory demo. The HTTP adapter never falls back to fixtures. No original attendees, photos or OCR output were seeded.
 
-`VITE_GUESTBOOK_API=/api` selects these endpoints. JSON errors must contain safe user-facing messages without internal details; the current client uses its own bounded error messages. Apply request body limits, appropriate status codes, same-origin protections, and no permissive credentialed CORS.
+## Identity and requests
 
-| Endpoint                           | Behavior                                                                                                                                                                                                                                             |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /api/health`                  | `{ mode: "public", capabilities: { moderation: true, rateLimit: true, ownerControls: true } }`. Set only for actually implemented capabilities.                                                                                                      |
-| `GET /api/guestbook`               | `{ pages: CardPage[], signatures: Signature[] }`; only approved public records, never drafts, owner secrets, demo fixtures, reports or original private photos.                                                                                      |
-| `POST /api/signatures`             | `{ draft, idempotencyKey }`; explicit publication after consent. Respond with `{ signature, ownerToken }` or a pending moderation receipt requiring a future client state. Current client supports immediately public, server-approved records only. |
-| `PATCH /api/signatures/:id`        | New draft. Verify the bearer owner capability, revalidate position/links and moderation. Respond with the updated public signature.                                                                                                                  |
-| `DELETE /api/signatures/:id`       | Verify owner capability, remove public record, return 204. Retention/deletion policies need owner approval.                                                                                                                                          |
-| `POST /api/signatures/:id/reports` | `{ reason }`, 5–500 characters; store privately, deduplicate/rate limit, enqueue moderator review. Return 204.                                                                                                                                       |
+Browsing is anonymous-compatible. Signing, editing, removing and reporting require the stable per-Site `userId` returned by Sites' server-only `getChatGPTUser()`. Neither email, browser JSON, raw identity headers nor bearer tokens establish ownership. `/api/me` provides durable account ownership across sessions/devices. Capability tokens remain only in the isolated demo; the HTTP adapter sends none.
 
-## Server requirements before public use
+Writes require exact same-origin Origin, reject cross-site fetch context, accept JSON only, cap bodies at 8 KiB and reject unknown fields. Responses use no-store; no permissive CORS is emitted. Hosted dispatch authentication still needs end-to-end verification after canonical integration. Tests inject trusted synthetic identities, not production login tokens.
 
-- Use a persistent store. Pre-create pages as an organizer action; visitors always sign an existing page. Store stable page IDs and normalized coordinates. No visitor Add page action.
-- Validate and normalize every field independently of the client: 2–28-character name, allowed font/ink, maximum two allowlisted HTTPS social profiles, no credentials or nonstandard ports, no markup/control characters. Derive link labels from validated URLs. Validate finite coordinates and artwork clear-space bounds.
-- Check collision bounds **atomically with the write**. Two concurrent visitors cannot claim the same space. Return a conflict requiring a new preview; never move a published signature silently.
-- Enforce bounded request sizes, per-session/account and network rate limits, duplicate suppression and idempotency server-side. The demo's 10-second memory timer is not a security control.
-- Moderate names/links and incoming reports. Supply organizer moderation access through an approved identity system; the frontend does not include an unsecured admin route. Decide and document pre- versus post-publication moderation. If using pending publication, implement a pending receipt state before enabling the client.
-- Use high-entropy owner capabilities stored as hashes with expiry/revocation, or authenticated ownership. Never return capabilities in public snapshots, URLs, logs or analytics. The current UI holds owner tokens only in session memory. It can edit/remove in the same open session; a durable account/recovery mechanism is still a **launch blocker**. Do not claim recovery exists.
-- Use appropriate same-origin CSRF/origin validation for cookie-authenticated actions. Restrict cache behavior for owner responses. Avoid third-party analytics and private report data in frontend errors.
-- Reject demo provenance in all public ingestion paths. Event-card imports require original source image identity/hash, source card/page IDs, and explicit reviewed approval. Ambiguous handwriting stays pending.
+## Application API
 
-## Acceptance checks to run against the real backend
+These are this app's routes, not Sites platform endpoints.
 
-1. Read a publication from two independent browsers; refresh both and verify persistence.
-2. Submit two overlapping drafts concurrently; exactly one succeeds. Confirm normalized placement remains stable after a mobile/desktop resize.
-3. Replay an idempotency key across timeouts; at most one record exists. Check uncertain mutation outcomes before retrying.
-4. Call create/update/delete without or with another owner's capability; all unauthorized mutations fail. Test recovery, revocation and deletion after a new session.
-5. Send abusive oversized bodies, invalid URLs, forged styles, invalid page IDs, out-of-bounds coordinates, unreviewed imports and demo records directly to the API. None may become public.
-6. Trigger rate limiting and report/moderation actions. Confirm moderation changes appear in all readers and reports stay private.
-7. Verify the exact original artwork and approved source mockups; no unreviewed writing region can be enabled.
+| Route                               | Behavior                                                                                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET /api/health                     | ChatGPT identity/review-required mode and actual application capabilities. Writes require verified artwork and configured moderators.                                           |
+| GET /api/guestbook                  | Approved public signatures and pages only; no owners, submission keys, reports, pending records or photo bytes.                                                                 |
+| GET /api/me                         | Private sign-in state, official-helper sign-in path, moderator flag and own pending/public/rejected signatures with versions.                                                   |
+| POST /api/signatures                | draft, idempotencyKey and consent=true; reserves an existing-page position and returns pending.                                                                                 |
+| PATCH /api/signatures/:id           | draft, version and consent=true; same account/original page only; edit returns to review.                                                                                       |
+| DELETE /api/signatures/:id          | Current version, same account; removes visibility and scrubs name/social/provenance content, retaining an idempotency tombstone.                                                |
+| POST /api/signatures/:id/reports    | Private 5–500-character reason; authenticated, deduplicated and rate limited.                                                                                                   |
+| GET /api/moderation                 | Configured organizers only: pending signatures and open reports, up to 100 each. Processing entries exposes the next queued entries.                                            |
+| POST /api/moderation/pages          | Organizer-only creation of stable page ID/order and optional actual source identities. Always uses delhincr-print-v3. No visitor Add page action.                               |
+| POST /api/moderation/signatures/:id | approve, reject or hide; current version and review note required. Hide removes a reported public signature. Review and audit are transactional.                                |
+| POST /api/moderation/reports/:id    | Organizer-only resolved/dismissed decision and note.                                                                                                                            |
+| POST /api/moderation/sources        | Registers an existing private R2 PNG/JPEG after checking actual bytes against supplied SHA-256; preserves physical card and page IDs separately. No upload or fabricated photo. |
+| POST /api/moderation/imports        | Creates a pending candidate from registered sourceId, normalized draft, actual extraction metadata and idempotency key. No automatic OCR/publication.                           |
 
-No server acceptance tests have been run because no server exists yet.
+Import approval also requires explicit confirmTranscription=true and confirmConsent=true, and rechecks the original R2 object checksum. Missing/changed original bytes block approval. A human must review before confirming. Provenance retains source card/page, original asset/hash, extracted text/handles, actual confidence or null, and review status.
+
+## Integrity and limits
+
+- Bound SQL parameters; names 2–28 characters; allowlisted font/ink; up to two validated HTTPS profiles with URL-derived labels. Unsupported protocols/domains/credentials/ports, controls, markup and out-of-zone coordinates are rejected server-side.
+- Collision checks are inside create/update SQL, covering pending and public reservations. Concurrent visitors cannot claim the same space. No signature is moved silently.
+- Unique owner/idempotency keys reject changed payloads, coalesce concurrent retries and prevent removed records from being resurrected.
+- Persistent atomic D1 quotas: 5 new visitor submissions/hour/account, 10 report attempts/hour/account, 60 mutation attempts/hour/account, plus 120 mutations/minute globally. Expired counters are pruned. This is bounded application abuse control, not comprehensive distributed-attack protection.
+- Version checks reject stale owner writes and competing review decisions. D1 batch commits review and audit together.
+- Schema constraints reject demo provenance and public unreviewed imports. Generated migrations are schema-only, with no attendees, page seeds or source records.
+- Removal scrubs signature content while minimal tombstones and existing private reports/audits remain. Retention and operational moderation policy need organizer approval before launch.
+
+## Validation and remaining work
+
+Run `npm run check:server` and `npm run test:server`. Tests use real local Miniflare D1, generated migrations, synthetic users and a one-pixel synthetic PNG. All fixtures are isolated and removed. Persistence is tested by restarting the runtime over the same temporary database; this is not browser storage or a mocked repository.
+
+Still required: canonical Sites starter/helper source and route integration; actual dispatch sign-in verification; exact artwork and verified writing regions; real moderator Site user IDs; organizer workflow/retention review; and approval before hosted provisioning/deployment. No external backend/identity provider is inherently required.
+
+Primary references: [D1 prepared statements](https://developers.cloudflare.com/d1/worker-api/prepared-statements/), [D1 database and batch](https://developers.cloudflare.com/d1/worker-api/d1-database/), [Miniflare D1](https://developers.cloudflare.com/workers/testing/miniflare/storage/d1/), and the Sites Storage, Identity and Secrets and Vinext starter references.

@@ -164,6 +164,7 @@ function App() {
   const [search, setSearch] = useState(false);
   const [query, setQuery] = useState("");
   const [about, setAbout] = useState(false);
+  const [mine, setMine] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const owners = useRef(new Map<string, string>());
@@ -171,7 +172,19 @@ function App() {
   const cardRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const page = data.pages[pageIndex];
-  const signatures = data.signatures.filter((s) => s.pageId === page?.id);
+  const visibleSignatures = [
+    ...new Map(
+      [
+        ...data.signatures,
+        ...(data.ownSignatures || []).filter((s) => s.status !== "rejected"),
+      ].map((s) => [s.id, s]),
+    ).values(),
+  ];
+  const signatures = visibleSignatures.filter((s) => s.pageId === page?.id);
+  const isOwned = (id: string) =>
+    demo
+      ? owners.current.has(id)
+      : !!data.ownSignatures?.some((s) => s.id === id);
   const demo = guestbook.mode === "demo";
   const artworkReady = artwork.available && artwork.safeRegionsVerified;
   async function refresh() {
@@ -273,7 +286,7 @@ function App() {
         .filter((s): s is NonNullable<typeof s> => !!s);
       const next = validateDraft(
         { ...draft, socials },
-        data.signatures.filter((s) => s.id !== editingId),
+        visibleSignatures.filter((s) => s.id !== editingId),
         data.pages,
       );
       legibleName(next);
@@ -291,18 +304,19 @@ function App() {
     try {
       const checked = validateDraft(
         draft,
-        data.signatures.filter((s) => s.id !== editingId),
+        visibleSignatures.filter((s) => s.id !== editingId),
         data.pages,
       );
       if (editingId) {
         await guestbook.update(
           editingId,
-          owners.current.get(editingId)!,
+          owners.current.get(editingId) || "",
           checked,
         );
       } else {
         const result = await guestbook.publish(checked, submission.current);
-        owners.current.set(result.signature.id, result.ownerToken);
+        if (result.ownerToken)
+          owners.current.set(result.signature.id, result.ownerToken);
       }
       setData(await guestbook.load());
       setEditor(null);
@@ -310,7 +324,7 @@ function App() {
       setNotice(
         demo
           ? "Added to this demo session. Nothing was published publicly."
-          : "Your signature is now public. You can edit or remove it from this session.",
+          : "Sent for organizer review. Only you and organizers can see it until approved. Your signed-in account can edit or remove it later.",
       );
     } catch (e) {
       setError((e as Error).message);
@@ -322,7 +336,10 @@ function App() {
     if (!selected || busy) return;
     setBusy(true);
     try {
-      await guestbook.remove(selected.id, owners.current.get(selected.id)!);
+      await guestbook.remove(
+        selected.id,
+        owners.current.get(selected.id) || "",
+      );
       setData(await guestbook.load());
       setSelected(null);
       setNotice(
@@ -338,7 +355,14 @@ function App() {
   }
   function edit() {
     if (!selected) return;
-    setDraft({ ...selected });
+    setDraft({
+      pageId: selected.pageId,
+      name: selected.name,
+      position: selected.position,
+      font: selected.font,
+      ink: selected.ink,
+      socials: selected.socials,
+    });
     setEditingId(selected.id);
     setLinks([selected.socials[0]?.url || "", selected.socials[1]?.url || ""]);
     setConsent(false);
@@ -402,6 +426,15 @@ function App() {
           <button onClick={() => setAbout(true)}>About</button>
         </nav>
         <div className="header-actions">
+          {!demo && data.signedIn && (
+            <button
+              className="icon"
+              aria-label="Your signatures"
+              onClick={() => setMine(true)}
+            >
+              <PencilSimple size={20} />
+            </button>
+          )}
           <button
             className="search-button"
             onClick={() => setSearch(true)}
@@ -417,14 +450,24 @@ function App() {
           >
             <ShareNetwork size={21} />
           </button>
-          <button
-            className="primary desktop-add"
-            onClick={begin}
-            disabled={!page || !!editor || !!flip}
-          >
-            <Plus size={17} />
-            Add yours
-          </button>
+          {!demo && data.signInPath && !data.signedIn ? (
+            <a
+              className="primary desktop-add"
+              href={data.signInPath}
+              target="_top"
+            >
+              Sign in to add yours
+            </a>
+          ) : (
+            <button
+              className="primary desktop-add"
+              onClick={begin}
+              disabled={!page || !!editor || !!flip}
+            >
+              <Plus size={17} />
+              Add yours
+            </button>
+          )}
         </div>
       </header>
       <div className="mode-banner" role="note">
@@ -650,14 +693,20 @@ function App() {
       )}
       {!editor && (
         <div className="mobile-cta">
-          <button
-            className="primary"
-            onClick={begin}
-            disabled={!page || !!flip}
-          >
-            <Plus size={19} />
-            Add yours
-          </button>
+          {!demo && data.signInPath && !data.signedIn ? (
+            <a className="primary" href={data.signInPath} target="_top">
+              Sign in to add yours
+            </a>
+          ) : (
+            <button
+              className="primary"
+              onClick={begin}
+              disabled={!page || !!flip}
+            >
+              <Plus size={19} />
+              Add yours
+            </button>
+          )}
         </div>
       )}
       {(editor === "position" || editor === "preview") && (
@@ -735,6 +784,8 @@ function App() {
           <h2>{editingId ? "Edit your signature" : "Add yours"}</h2>
           <p className="muted">
             On page {pageIndex + 1}. Choose the ink that feels like you.
+            {!demo &&
+              " Organizers review new signatures before they appear publicly."}
           </p>
           <form onSubmit={preview}>
             <label htmlFor="name">Your name</label>
@@ -762,7 +813,11 @@ function App() {
                     aria-pressed={draft.font === f}
                     onClick={() => setDraft((d) => ({ ...d, font: f }))}
                   >
-                    {{ caveat: "Caveat", dancing: "Dancing", kalam: "Kalam" }[f]}
+                    {
+                      { caveat: "Caveat", dancing: "Dancing", kalam: "Kalam" }[
+                        f
+                      ]
+                    }
                   </button>
                 ))}
               </div>
@@ -908,7 +963,13 @@ function App() {
           className="signature-dialog"
         >
           <p className="eyebrow">
-            {demo ? "DEMO SIGNATURE" : "A COMMUNITY CONNECTION"}
+            {demo
+              ? "DEMO SIGNATURE"
+              : selected.status === "pending"
+                ? "PRIVATE · AWAITING REVIEW"
+                : selected.status === "rejected"
+                  ? "PRIVATE · NEEDS CHANGES"
+                  : "A COMMUNITY CONNECTION"}
           </p>
           <h2
             className={`font-${selected.font}`}
@@ -932,7 +993,7 @@ function App() {
           ) : (
             <p className="muted">No social links added.</p>
           )}
-          {owners.current.has(selected.id) && (
+          {isOwned(selected.id) && (
             <div className="owner-actions">
               <button className="secondary" onClick={edit}>
                 <PencilSimple size={17} />
@@ -944,43 +1005,91 @@ function App() {
               </button>
             </div>
           )}
-          {!reporting ? (
-            <button
-              className="text-button"
-              onClick={() => {
-                setReporting(true);
-                setReportReason("");
-              }}
-            >
-              <Flag size={16} />
-              Report a concern
-            </button>
-          ) : (
-            <form onSubmit={report}>
-              <label htmlFor="reason">What should be reviewed?</label>
-              <textarea
-                id="reason"
-                required
-                minLength={5}
-                maxLength={500}
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-              />
-              <p className="field-help">
-                {demo
-                  ? "Demo only. This will not send a report."
-                  : "Your report is sent privately to the moderation team."}
-              </p>
-              <button className="secondary" disabled={busy}>
-                {demo ? "Try demo report" : "Submit report"}
+          {selected.status !== "pending" &&
+            selected.status !== "rejected" &&
+            (!reporting ? (
+              <button
+                className="text-button"
+                onClick={() => {
+                  setReporting(true);
+                  setReportReason("");
+                }}
+              >
+                <Flag size={16} />
+                Report a concern
               </button>
-            </form>
-          )}
+            ) : (
+              <form onSubmit={report}>
+                <label htmlFor="reason">What should be reviewed?</label>
+                <textarea
+                  id="reason"
+                  required
+                  minLength={5}
+                  maxLength={500}
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                />
+                <p className="field-help">
+                  {demo
+                    ? "Demo only. This will not send a report."
+                    : "Your report is sent privately to the moderation team."}
+                </p>
+                <button className="secondary" disabled={busy}>
+                  {demo ? "Try demo report" : "Submit report"}
+                </button>
+              </form>
+            ))}
           {error && (
             <p className="error" role="alert">
               {error}
             </p>
           )}
+        </Modal>
+      )}
+      {mine && (
+        <Modal label="Your signatures" onClose={() => setMine(false)}>
+          <p className="eyebrow">YOUR MARKS</p>
+          <h2>Your signatures</h2>
+          <p className="muted">
+            Pending and rejected signatures are private to you and organizers.
+          </p>
+          <div className="search-results">
+            {data.ownSignatures?.length ? (
+              data.ownSignatures.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    if (editor) {
+                      setNotice(
+                        "Finish or cancel your current signature first.",
+                      );
+                      return;
+                    }
+                    setPageIndex(
+                      data.pages.findIndex((p) => p.id === s.pageId),
+                    );
+                    setSelected(s);
+                    setMine(false);
+                    setError("");
+                    setReporting(false);
+                  }}
+                >
+                  <span className={`font-${s.font}`}>{s.name}</span>
+                  <small>
+                    {s.status === "pending"
+                      ? "Awaiting review"
+                      : s.status === "rejected"
+                        ? "Needs changes"
+                        : "Public"}{" "}
+                    · Page {data.pages.findIndex((p) => p.id === s.pageId) + 1}
+                  </small>
+                  <ArrowUpRight size={18} />
+                </button>
+              ))
+            ) : (
+              <p>No signatures yet.</p>
+            )}
+          </div>
         </Modal>
       )}
       {about && (
@@ -1001,7 +1110,7 @@ function App() {
           <p>
             {demo
               ? "This demo runs in memory. Nothing is publicly published or saved, and refreshing clears your additions. You can edit or remove additions during this session."
-              : "You can edit or remove your signature from this session. Keep this tab open until you are finished. A verified account recovery process must be configured before launch."}
+              : "Sign in with the same ChatGPT account to edit or remove your signature on another visit or device. New signatures and edits need organizer approval before they appear publicly."}
           </p>
           <h3>From the original cards</h3>
           <p>
