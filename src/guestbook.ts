@@ -107,6 +107,11 @@ export function createHttpGuestbook(
     throw new Error("Guestbook API must be a same-origin path.");
   const ownedVersions = new Map<string, number>();
   let knownPages: CardPage[] = [];
+  function jsonObject(value: unknown): Record<string, unknown> {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      throw new Error("Invalid guestbook response.");
+    return value as Record<string, unknown>;
+  }
   async function request(path: string, method = "GET", body?: unknown) {
     const response = await fetch(base + path, {
       method,
@@ -118,7 +123,7 @@ export function createHttpGuestbook(
       let message = "";
       if ([400, 401, 403, 404, 409, 410, 429].includes(response.status)) {
         try {
-          const error = await response.json();
+          const error = jsonObject(await response.json());
           if (typeof error.error === "string" && error.error.length <= 300)
             message = error.error;
         } catch {}
@@ -132,7 +137,7 @@ export function createHttpGuestbook(
               : "Could not confirm publication. Check your signatures before retrying."),
       );
     }
-    return response.status === 204 ? null : response.json();
+    return response.status === 204 ? {} : jsonObject(await response.json());
   }
   function privateSignature(value: unknown): Signature {
     if (!value || typeof value !== "object")
@@ -158,13 +163,14 @@ export function createHttpGuestbook(
     mode: "public",
     async load() {
       const health = await request("/health");
+      const capabilities = jsonObject(health.capabilities);
       if (
         health.mode !== "public" ||
         health.identity !== "chatgpt" ||
         health.publication !== "review-required" ||
-        health.capabilities?.moderation !== true ||
-        health.capabilities?.rateLimit !== true ||
-        health.capabilities?.ownerControls !== true
+        capabilities.moderation !== true ||
+        capabilities.rateLimit !== true ||
+        capabilities.ownerControls !== true
       )
         throw new Error(
           "Shared publishing is not configured with moderation, rate limiting and owner controls.",
@@ -204,7 +210,7 @@ export function createHttpGuestbook(
       });
       const signature = privateSignature(result.signature);
       ownedVersions.set(signature.id, signature.version!);
-      return { signature, status: result.status };
+      return { signature, status: signature.status };
     },
     async update(id, _demoToken, draft) {
       if (!artworkReady) throw new Error("Editing awaits verified artwork.");

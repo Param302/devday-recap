@@ -9,8 +9,13 @@ if (!art.safeRegionsVerified)
   blockers.push(
     "writing regions have not been checked against the original artwork",
   );
-if (!process.env.VITE_GUESTBOOK_API)
-  blockers.push("approved persistent backend is not configured");
+const hosting = JSON.parse(
+  fs.readFileSync(new URL("../.openai/hosting.json", import.meta.url)),
+);
+if (!hosting.project_id)
+  blockers.push(
+    "a registered Sites project has not been approved or configured",
+  );
 if (!fs.existsSync(new URL("../app/chatgpt-auth.ts", import.meta.url)))
   blockers.push("official Sites ChatGPT identity helper is not integrated");
 if (!fs.existsSync(new URL("../app/api/[...path]/route.ts", import.meta.url)))

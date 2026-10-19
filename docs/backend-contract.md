@@ -1,6 +1,6 @@
 # Application backend contract
 
-The application API in `server/api.ts` is implemented against Cloudflare D1 and locally tested using Miniflare D1/R2. `server/sites.ts` composes it with the official Sites identity helpers supplied by a server route. **Canonical Sites runtime/auth integration remains blocked:** the official starter/helper source files are unavailable through the current skill resource interface. No Site, hosted resources or deployment exists.
+The application API in `server/api.ts` is implemented against Cloudflare D1 and locally tested using Miniflare D1/R2. `server/sites.ts` composes it with the unmodified official Sites identity helpers in the canonical Vinext server route. The previous source-availability blocker was resolved by the verified parent handoff. Local runtime/auth integration passes; no Site, hosted resources or deployment exists.
 
 The default UI remains an explicit in-memory demo. The HTTP adapter never falls back to fixtures. No original attendees, photos or OCR output were seeded.
 
@@ -8,7 +8,7 @@ The default UI remains an explicit in-memory demo. The HTTP adapter never falls 
 
 Browsing is anonymous-compatible. Signing, editing, removing and reporting require the stable per-Site `userId` returned by Sites' server-only `getChatGPTUser()`. Neither email, browser JSON, raw identity headers nor bearer tokens establish ownership. `/api/me` provides durable account ownership across sessions/devices. Capability tokens remain only in the isolated demo; the HTTP adapter sends none.
 
-Writes require exact same-origin Origin, reject cross-site fetch context, accept JSON only, cap bodies at 8 KiB and reject unknown fields. Responses use no-store; no permissive CORS is emitted. Hosted dispatch authentication still needs end-to-end verification after canonical integration. Tests inject trusted synthetic identities, not production login tokens.
+Writes require exact same-origin Origin, reject cross-site fetch context, accept JSON only, cap bodies at 8 KiB and reject unknown fields. Responses use no-store; no permissive CORS is emitted. Hosted dispatch authentication still needs end-to-end verification after an approved deployment. D1 integration tests use trusted synthetic identities; three additional runtime tests exercise the official local sign-in middleware/helper without route interception or injected identity callbacks.
 
 ## Application API
 
@@ -46,6 +46,6 @@ Import approval also requires explicit confirmTranscription=true and confirmCons
 
 Run `npm run check:server` and `npm run test:server`. Tests use real local Miniflare D1, generated migrations, synthetic users and a one-pixel synthetic PNG. All fixtures are isolated and removed. Persistence is tested by restarting the runtime over the same temporary database; this is not browser storage or a mocked repository.
 
-Still required: canonical Sites starter/helper source and route integration; actual dispatch sign-in verification; exact artwork and verified writing regions; real moderator Site user IDs; organizer workflow/retention review; and approval before hosted provisioning/deployment. No external backend/identity provider is inherently required.
+Still required: hosted dispatch sign-in verification; exact artwork and verified writing regions; real moderator Site user IDs; organizer workflow/retention review; and approval before hosted provisioning/deployment. No external backend/identity provider is inherently required.
 
 Primary references: [D1 prepared statements](https://developers.cloudflare.com/d1/worker-api/prepared-statements/), [D1 database and batch](https://developers.cloudflare.com/d1/worker-api/d1-database/), [Miniflare D1](https://developers.cloudflare.com/workers/testing/miniflare/storage/d1/), and the Sites Storage, Identity and Secrets and Vinext starter references.

@@ -1,60 +1,70 @@
-# Supported Sites backend assessment
+# Sites runtime and backend
 
-Inspected on 2026-10-19. The application D1 backend is now implemented and locally tested; the canonical Sites runtime remains to be integrated. No Site registration, hosted resource provisioning, hosted migration application, access-policy change or deployment was performed. Generated migrations were applied only to isolated local test databases.
+The official Sites 1.0.0 Vinext runtime is integrated and locally verified. The prior starter-source blocker was resolved by the parent supplying official source. No Site registration, hosted resource provisioning, hosted migrations, access-policy changes or deployment occurred.
 
-## Supported platform capabilities
+## Official source and adaptations
 
-The current Sites skill's Storage, Identity and Secrets references and Vinext starter README explicitly support:
+The auth helper, Sites Vite plugin and MIT license match the parent's supplied SHA-256 hashes exactly. See `official-starter-provenance.json`. Source was first inspected in an empty sibling reference directory, then integrated without overwriting the existing D1 schema or guestbook implementation.
 
-- **D1 structured persistence**: declare the logical binding in `.openai/hosting.json` (the starter normally uses `DB`). Sites provisions and connects hosted resources during its supported workflow. The starter includes `db/index.ts`, an empty `db/schema.ts`, Drizzle generation and local D1 migration support.
-- **R2 file storage**: optional `BUCKET` binding accessed server-side via the Worker environment. This fits future private original card photos, not yet supplied. Leave unused R2 bindings null until the photo workflow is implemented.
-- **Durable visitor identity**: dispatch supplies `oai-authenticated-user-id` and email to signed-in requests. The user ID is stable within the same Site. Use the ID, not email, as the ownership key.
-- **Public reading with authenticated writing**: public Sites may receive anonymous requests. Server routes can require identity for sign/publish/edit/remove while keeping browsing public. Sign-in must use the starter's server-only helpers and top-level navigation to the dispatch-owned route. Do not create OAuth endpoints or trust client-supplied identity.
-- **Local backend development**: the portable Vinext starter supports local bindings, D1 migration application and loopback-only mock sign-in. Local and hosted databases are separate. Local development does not require deploying a Site.
+- `app/chatgpt-auth.ts` is the unmodified official server-only helper. `/api/[...path]` calls it and the application's `createSitesGuestbook`. There are no app-owned sign-in, sign-out or callback routes.
+- `build/sites-vite-plugin.ts` and its license are unmodified. The `sites()` integration remains in `vite.config.ts`.
+- The Worker uses the official `vinext/server/fetch-handler` contract. Connector context/preview wrappers are omitted because this app declares no connected apps. The unused `lib/connector-context.ts` and `lib/connector-contract.mjs` are therefore not required imports; those official companions would be needed before adding connected-app capabilities.
+- Framework dependencies match the provided starter versions: Vinext 1.0.0-beta.5, Vite 8.0.13, Cloudflare Vite plugin 1.37.1, Wrangler 4.92.0, Next 16.3.4 and React 19.2.6.
+- Official execution-profile/run-framework/environment helpers preserve portable and managed entry points. This environment used the portable profile. Managed Linux preview was not tested.
+- `.openai/hosting.json` declares logical D1 `DB` and unused R2 `null`, using the provided starter's actual format. It has no project ID. The database UUID emitted for local simulation is the official starter placeholder, not a hosted resource.
 
-A separate external database or identity provider is therefore **not required**. No claim is made that the current static React/Vite app already has these features.
+The existing frontend lives in `src/App.tsx`. The canonical Site page explicitly uses `/api`; separate `dev:demo` and `build:demo` commands retain the browser-only demo. No frontend environment variable is needed for the canonical Site's API path.
 
-## Implemented locally
+## Local verification
 
-`server/api.ts` implements D1 persistence, durable account ownership, pending publication, organizer approval/rejection/hiding, private reports, optimistic versions, atomic position reservations, idempotency and persistent rate limits. `db/schema.ts` and generated `drizzle/` migrations model the data, private provenance, original-image registry and review audit. The shared client uses same-origin ChatGPT sessions, not bearer capabilities, and provides private pending/own-record management separately from public search/browsing.
+The actual canonical runtime was tested through the official loopback-only development sign-in flow, without route interception or an injected identity callback. Tests verify rejected forged identity headers, top-level sign-in, HttpOnly/SameSite cookie behavior, reload persistence, sign-out, prefetch protection, unsafe-return handling, cross-origin rejection and D1 reads through the API route. Signed-in writes stay closed while original artwork is unverified.
 
-`server/sites.ts` is the composition entry point. It accepts the real server-only `getChatGPTUser` and `chatGPTSignInPath` functions from the official starter; it does not recreate them or read untrusted identity headers. Checked-in artwork metadata controls writing readiness, with no request/env bypass. The local tests use actual Miniflare D1/R2 and explicitly synthetic identity callbacks. Hosted sign-in has not been verified.
+This is the official **local preview simulation**, not a claim that hosted dispatch login has succeeded. Production client/server outputs were scanned and contain none of `__sites_local_auth`, `local_seedy` or `seedy@sites.test`. The official local mock is absent from production builds.
 
-## Exact local integration blocker
+The D1 application tests separately verify persistence after runtime restart, atomic collisions/idempotency, account ownership, stale versions, quotas, private reports, organizer approval/hiding, audit and reviewed source imports. Local and hosted databases are distinct. No actual event attendees or photos were created.
 
-The Sites plugin is absent from the execution environment's local plugin directories. Reading its supported documentation works, but these required code resources return `failed to read skill resource`:
+## Run locally
 
-- `scripts/project-setup.mjs`
-- `scripts/site-workflow.mjs`
-- `templates/vinext-starter/vite.config.ts`
-- `templates/vinext-starter/app/chatgpt-auth.ts`
+For a self-contained demo:
 
-Attempts used the known Sites package's complete skill resource paths. This is unavailable source, not a permission denial. The canonical starter/identity implementation has not been guessed or substituted. Supply the supported starter/helper bundle (or make its resources available), then preserve its `sites()` runtime integration and route identity requests through those exact official helpers. The current Vite frontend and D1 API tests remain runnable independently.
+```sh
+npm run dev:demo -- --host 0.0.0.0 --port 4173 --strictPort
+```
 
-## Configuration and approval needed for deployment
+For the canonical runtime, first build:
 
-1. Supply the official Sites starter/helpers and integrate its server route with `createSitesGuestbook(env, { getChatGPTUser, chatGPTSignInPath })`. Use a dynamic, server-only API route; preserve the starter's auth and build integrations. Do not implement dispatch-owned sign-in/callback routes.
-2. Select/register a private Site only after the needed approval; retain the **returned** project ID. Use the official source helper and its actual manifest schema. No project ID or non-null hosting binding JSON shape has been invented in this checkout.
-3. Configure the logical D1 binding **DB**. Use the generated schema-only migrations, inspect them and run canonical starter builds/local migrations before any hosted publication. The backend never creates tables in request handlers. No external database credential is required for this binding.
-4. Set server-only **YWH_MODERATOR_USER_IDS** to a JSON array of up to 20 actual **Site-scoped ChatGPT user IDs**. Values must come from authenticated identity in that Site, not guessed GitHub names or email addresses. Empty configuration disables publication. Review the chosen organizer access policy and staffing before launch.
-5. Use **VITE_GUESTBOOK_API=/api** in the frontend build. Keep runtime configuration out of browser secrets. No OpenAI API key is required; no OCR service has been implemented.
-6. Supply/import the exact original version-3 PDF, verify the safe writing zone against actual artwork, and complete visual QA. `server/sites.ts` keeps writes disabled while that checked-in readiness proof is absent.
-7. The implemented publication policy requires ChatGPT sign-in for writes and organizer review before publication. Confirm that product/access policy and retention policy, then verify actual dispatch authentication, ownership and moderation through the canonical runtime.
-8. Approve provisioning/publication before Sites applies hosted migrations or deploys. New Sites begin private; changing to public reading is a separate audience decision. Keep the supplied existing audience unless a change is explicitly authorized.
-9. **BUCKET** is optional and should remain unused/null until original-photo storage is approved and sources exist. Its eventual use enables private original-image registration/import review. No real photos, uploaded files or attendee imports currently exist.
+```sh
+npm run build
+```
 
-## Remaining integration sequence
+Apply each **pending** migration once to the local database using the official starter's command:
 
-1. Preserve the current frontend, D1 application code, generated migrations and evidence while opening the supported Vinext starter through the Sites workflow once its source is available.
-2. Connect a dynamic server-only API route to the official identity helpers and `createSitesGuestbook`. Preserve the starter's `sites()` integration, binding declaration format and local migration commands. Do not replace hosted authentication.
-3. Run the existing application tests through that runtime, verify real dispatch sign-in and configured organizer access, then review the operational moderation and retention policy. Local application tests do not establish the hosted identity boundary.
-4. Complete original-artwork verification and visual QA. Obtain needed approval before registering a Site, provisioning bindings, applying hosted migrations, changing audience or publishing.
+```sh
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_sweet_shen.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_furry_white_tiger.sql
+```
 
-## Remaining decisions and limits
+Both were applied only to this checkout's new local database during integration. Do not replay applied migrations or change applied SQL, snapshots or journals. Use the same `.wrangler/state` path as runtime preview.
 
-- No supported Site project has been selected/registered, so there is no hosted database or verified runtime identity for this app yet.
-- The implemented default is ChatGPT sign-in for writes with durable account ownership, and organizer approval before public visibility. Confirm that policy before launch.
-- Actual moderator IDs, retention and moderation operations remain to be configured/approved; application authorization exists but is not a staffed hosted moderation service. The organizer API is implemented; a dedicated visual review console is not yet included.
-- The exact artwork still needs to be supplied and its writing regions verified. Storage support does not remove that design blocker.
+Create an ignored `.dev.vars` from `.dev.vars.example` only if one does not already exist, then:
 
-Sources inspected: Sites `references/storage.md`, `references/identity-and-secrets.md`, `templates/vinext-starter/README.md`, and `templates/worker-esm-starter/README.md`. The Worker ESM starter has a different embedded-asset constraint and is not the selected recommendation for preserving this app's standalone original artwork assets and adding structured persistence.
+```sh
+npm run dev -- --hostname 127.0.0.1 --port 4175
+npm run test:runtime
+```
+
+The example grants organizer access to the official preview-only `local_seedy` user. Never use that ID in hosted configuration. Local mock sign-in is loopback-only; managed-profile previews do not enable it. The integration-created `.dev.vars` is removed after testing; existing user environment files are never overwritten.
+
+`npm start` previews the built Worker locally through Wrangler; hosted dispatch owns real sign-in and is not simulated by that built-preview command.
+
+## Configuration and approval still required
+
+1. Complete the authorized original-artwork handoff. No alternate asset transfer was attempted during runtime integration. Import the exact version-3 PDF, verify clear writing regions and complete source-to-build visual QA before enabling signatures.
+2. Obtain approval before creating/registering a private Site or provisioning resources. Retain only the actual returned project ID. Use the full official Sites source helper for synchronization/packaging and publishing; no custom deployment route has been substituted.
+3. Provision/bind D1 **DB** through that supported workflow and apply the inspected schema-only migrations through Sites. No external database credentials are needed for the binding.
+4. Configure server-only **YWH_MODERATOR_USER_IDS** as a JSON array of up to 20 actual **Site-scoped ChatGPT user IDs**, obtained from authenticated users in that Site. Do not guess GitHub names or email addresses. Empty configuration disables publication.
+5. Confirm the chosen policy: anonymous public reading, ChatGPT sign-in for writes, organizer review before publication, and the documented retention policy. Assign real moderation operations; a dedicated visual organizer console is not yet included, though organizer API actions are implemented.
+6. Verify hosted dispatch authentication/authorization after an approved private deployment. Changing the Site to public reading requires the audience decision; preserve existing audience unless explicitly authorized.
+7. Leave **R2 null** until original-photo storage is approved and photos exist. A future **BUCKET** binding enables private registered-image verification/import review. No photo upload endpoint, OCR service, OpenAI API key or automatic import is present.
+
+The artwork and hosted deployment approvals remain on hold. Local runtime/auth integration is complete; no mandatory runtime source imports remain missing.

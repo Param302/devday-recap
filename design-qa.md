@@ -37,3 +37,7 @@ Cloud browser tooling is not exposed in this task. Local installed Chromium prov
 ## Backend milestone evidence (does not change visual result)
 
 Nine browser tests now pass, including shared-mode pending/private/approved behavior against local D1 through a test transport. `evidence/private-pending-test.png` records a synthetic private pending signature at 1100 × 950, density 1. This verifies application interaction states; it does not verify hosted ChatGPT sign-in, original artwork or source-to-build fidelity. The source-image blocker remains, so final result remains blocked.
+
+## Canonical runtime integration
+
+The official Sites auth helper and local preview middleware are now integrated with the canonical Vinext/D1 route. Three actual-runtime checks pass in addition to the existing nine browser checks; `evidence/sites-runtime-empty-test.png` shows the signed-in local preview with no organizer-created pages. Production bundles exclude the local auth mock. Hosted dispatch login remains unverified because no deployment occurred. These runtime results do not resolve absent artwork/mockup pixels; final result remains blocked.

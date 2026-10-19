@@ -1,0 +1,26 @@
+{
+  "source": "Official Sites plugin 1.0.0, skills/sites/templates/vinext-starter",
+  "delivery": "Parent source-code handoff; no artwork, credentials or Site identity",
+  "verifiedVerbatim": {
+    "app/chatgpt-auth.ts": "4265a2e7c2dcb3a6f4b7026f762bf5b6e4caec76cc13c0a45987ee9a9f2e42cc",
+    "build/sites-vite-plugin.ts": "07af20e7097d9ed1d76f7c446d02997550b8fc5ca89668b249e25eabd62c6834",
+    "build/sites-vite-plugin.LICENSE": "7de1e115d165f176e68f962acdb809b5ab8d8ae78d3981e0701392b2ac50c713"
+  },
+  "adapted": [
+    "vite.config.ts: preserve vinext/sites/cloudflare integration; omit unused connector preview services; enable logical DB binding",
+    "build/sites-worker.ts: preserve official fetch-handler contract; omit unused connector capability wrapper",
+    "cloudflare-env.d.ts: add server-only moderator configuration and explicit SDK binding types",
+    "app/page.tsx and app/layout.tsx: use existing guestbook component",
+    "app/api/[...path]/route.ts: compose existing D1 API with official identity helpers"
+  ],
+  "unusedCompanionImports": [
+    "lib/connector-context.ts",
+    "lib/connector-contract.mjs",
+    "build/connector-preview-plugin.mjs",
+    "build/connector-preview-worker.mjs"
+  ],
+  "notes": [
+    "No complete-starter overwrite or project registration was performed.",
+    "Local loopback identity simulation is official development behavior and is excluded from production bundles."
+  ]
+}

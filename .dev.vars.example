@@ -1,0 +1,2 @@
+# Local-only official Sites preview user. Never use this ID as a hosted moderator.
+YWH_MODERATOR_USER_IDS='["local_seedy"]'

@@ -21,6 +21,6 @@ The selected environment was described as `codex-devday-recap`, with saved confi
 
 1. Supply the exact PDF and desktop/mobile approval image bytes through a supported transfer into this environment. Import the PDF without altering its artwork, verify layout ratio and collision-safe writing regions.
 2. Compare source and implementation screenshots at matching sizes, then fix design differences; `design-qa.md` must pass before declaring fidelity complete.
-3. The D1 API and local persistence/concurrency/moderation tests are implemented. Supply the unavailable official Sites starter/auth helper source, integrate the canonical route, verify actual dispatch sign-in and configure real moderator IDs, then obtain needed approval before hosted provisioning/deployment. No separate external service is required.
+3. The D1 API, canonical Sites route, official auth helper and local runtime/auth tests are implemented. Configure real moderator Site IDs and verify hosted dispatch after an approved private deployment. No separate external service is required; provisioning/publication approval is still pending.
 4. Retrieve the original 14-section specification and the intended ChatGPT Space/Page identity with authorized access; reconcile requirements and create/update that exact requested Page. No substitute Space is authorized.
 5. Review the working implementation and approve any future deployment through the supported Sites workflow. No deployment occurred in this implementation session.

@@ -8,7 +8,21 @@
     "strict": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "types": ["node", "@cloudflare/workers-types"],
+    "allowJs": true
   },
-  "include": ["src", "tests/domain.test.ts", "vite.config.ts"]
+  "include": [
+    "src",
+    "app",
+    "build/**/*.ts",
+    "server",
+    "db",
+    "cloudflare-env.d.ts",
+    "tests/domain.test.ts",
+    "vite.config.ts",
+    "vite.demo.config.ts"
+  ]
 }

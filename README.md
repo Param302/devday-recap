@@ -2,7 +2,7 @@
 
 A DevDay Community DelhiNCR signature tent card. React + TypeScript + Vite, self-hosted handwriting fonts, and DOM/CSS rotation about the top binding. No heavy 3D runtime.
 
-**Status: implementation in progress, not ready for public release.** The exact PDF and approval mockups resolve in Library, but this execution environment's proxy refuses their download hosts (HTTP 403). The UI explicitly shows the unavailable artwork instead of recreating it. No original attendee signatures have been imported. A D1 application backend is implemented and locally tested; canonical Sites runtime/auth integration and hosted provisioning remain pending.
+**Status: implementation in progress, not ready for public release.** The exact PDF and approval mockups resolve in Library, but this execution environment's proxy refuses their download hosts (HTTP 403). The UI explicitly shows the unavailable artwork instead of recreating it. No original attendee signatures have been imported. A D1 application backend is implemented and locally tested; the official Sites runtime/auth helper is integrated and locally verified. Artwork and hosted provisioning remain pending.
 
 ## Run
 
@@ -10,7 +10,7 @@ Node 22.18+ (Node 24 tested).
 
 ```sh
 npm ci
-npm run dev -- --host 0.0.0.0 --port 4173 --strictPort
+npm run dev:demo -- --host 0.0.0.0 --port 4173 --strictPort
 npm test
 npm run test:browser
 npm run check:server
@@ -46,9 +46,9 @@ Approved desktop: `libfile_2e779dec10f881919371cfda01aa804f`; mobile: `libfile_3
 
 ## Shared backend
 
-The D1 backend in `server/api.ts` is locally tested for persistence, atomic reservations, validation, moderation/reports, identity ownership, idempotency and quotas. New submissions and edits require organizer review. `server/sites.ts` binds it to the official identity helper functions supplied by a canonical Sites server route. That integration is **blocked** because required official starter/helper source files are unavailable through this environment's skill resource interface. No alternative authentication stack or fake platform API was created.
+The D1 API in `server/api.ts` is integrated through the canonical Vinext route and the unmodified official Sites auth helper. New submissions and edits require organizer review. The actual loopback runtime has been tested for local sign-in, identity-header rejection, D1 reads and artwork gating. Hosted dispatch sign-in remains unverified because no Site has been deployed.
 
-Sites supports D1, optional R2 and ChatGPT sign-in; no separate external service is necessary. See [deployment configuration](docs/sites-backend.md) and [the API contract](docs/backend-contract.md). `VITE_GUESTBOOK_API=/api` selects the shared adapter after runtime integration. API failures never switch to fixtures. Nothing has been provisioned or deployed.
+The canonical page uses `/api` directly. `VITE_GUESTBOOK_API` is only an optional standalone preview setting. API failures never fall back to demo fixtures. See [local runtime setup and deployment configuration](docs/sites-backend.md), [API contract](docs/backend-contract.md) and [official source provenance](docs/official-starter-provenance.json). No external backend or identity provider is required.
 
 ## Event-card imports
 
@@ -56,7 +56,9 @@ Sites supports D1, optional R2 and ChatGPT sign-in; no separate external service
 
 ## Sites compatibility
 
-`npm run build` emits static `dist/`, suitable for the supported Sites static packaging workflow. The Vite dev script accepts required host/port flags. No Site has been registered, no hosting manifest identity has been invented, and nothing has been deployed. Future hosting must use the Sites skill and a returned project ID. Shared behavior can use Sites' supported Vinext/D1/identity workflow after local server implementation and the needed provisioning/deployment approval. Static hosting alone does not provide a persistent guestbook.
+`npm run build` now emits the supported Vinext Worker, client assets and hosting/migration metadata in `dist/`. The official `sites()` integration and MIT license are preserved. `npm run build:demo` separately emits the browser-only preview in `dist-demo/`. Existing signing behavior and demo fixtures remain intact.
+
+No Site has been registered, no project identity invented, and nothing has been provisioned or deployed. Follow the [Sites runtime guide](docs/sites-backend.md) for first local migration setup, `.dev.vars` and `npm run test:runtime`. Publication and artwork transfer approvals remain on hold.
 
 ## Specification gap
 

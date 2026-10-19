@@ -11,12 +11,12 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "npm run dev -- --host 0.0.0.0 --port 4173 --strictPort",
+      command: "npm run dev:demo -- --host 0.0.0.0 --port 4173 --strictPort",
       url: "http://127.0.0.1:4173",
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: "npm run dev -- --host 0.0.0.0 --port 4174 --strictPort",
+      command: "npm run dev:demo -- --host 0.0.0.0 --port 4174 --strictPort",
       url: "http://127.0.0.1:4174",
       env: { VITE_GUESTBOOK_API: "/api" },
       reuseExistingServer: !process.env.CI,

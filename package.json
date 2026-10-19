@@ -4,15 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "dev": "node scripts/run-framework.mjs dev",
+    "build": "tsc --noEmit && node scripts/run-framework.mjs build",
     "test": "node --experimental-strip-types --test tests/domain.test.ts",
     "test:browser": "playwright test",
     "assets:import": "python3 scripts/import_artwork.py",
     "check:release": "node scripts/check-release.mjs",
     "db:generate": "drizzle-kit generate",
     "test:server": "node --experimental-strip-types --test tests/server.test.ts",
-    "check:server": "tsc --noEmit -p tsconfig.server.json"
+    "check:server": "tsc --noEmit -p tsconfig.server.json",
+    "dev:demo": "vite --config vite.demo.config.ts",
+    "build:demo": "tsc --noEmit && vite build --config vite.demo.config.ts",
+    "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
+    "test:runtime": "playwright test --config playwright.runtime.config.ts"
   },
   "dependencies": {
     "@fontsource/caveat": "^5.2.8",
@@ -20,19 +24,25 @@
     "@fontsource/kalam": "^5.2.8",
     "@phosphor-icons/react": "^2.1.10",
     "drizzle-orm": "^0.45.4",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "next": "16.3.4",
+    "react-server-dom-webpack": "19.2.6",
+    "vinext": "1.0.0-beta.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261019.1",
+    "@cloudflare/workers-types": "4.20260515.1",
     "@playwright/test": "^1.56.0",
     "@types/node": "^26.6.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "6.0.2",
     "drizzle-kit": "^0.31.11",
     "miniflare": "^4.20260730.0",
     "typescript": "^5.9.3",
-    "vite": "^7.1.12"
+    "vite": "8.0.13",
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "wrangler": "4.92.0"
   }
 }
