@@ -51,10 +51,22 @@ real local D1. They do not verify hosted ChatGPT authentication or hosted storag
    `scripts/site-workflow.mjs` resources returned `failed to read skill resource`.
    The required supported source-opening/commit/push/package workflow cannot run
    until the official helper and its companions are available.
-3. `.openai/hosting.json` contains only `d1: "DB"` and `r2: null`, with no
-   `project_id`. Sites `list_sites` returned three unrelated existing projects and
-   no recap project. No duplicate or new Site was created. A confirmed recap
-   identity, or initial private registration once the source is ready, is needed.
+3. Site identity is now resolved. After a fresh listing again returned no recap
+   project, native `create_site` registered `dddrecap` exactly once:
+   `appgprj_6ad7aa809e748191ab5cc90d55ccab61`. The returned ID was immediately
+   persisted in `.openai/hosting.json`. `get_site` confirmed owner-only custom
+   access, version count 0, and no live URL. The platform returned the expected
+   address `https://dddrecap.param3021.chatgpt.site` at registration; this is not
+   evidence of deployment. Reuse this ID and never create a duplicate.
+
+The parent reported recovered skill-document availability and requested another
+helper attempt. Reading the Sites skill and troubleshooting document succeeds.
+Both documented helper resource locations still fail with `failed to read skill
+resource`; a filesystem search finds no `site-workflow.mjs`, `set-project-id.mjs`,
+or `project-setup.mjs`, and executor skill discovery returns no installed skills.
+The official helper and companion files must be supplied through the supported
+plugin setup before source packaging. Registration credentials remain in session
+memory only; a later session can obtain a fresh source credential for the same ID.
 
 No deployment was attempted, and no live URL, hosted auth, hosted saving,
 ownership, or moderation result is claimed. There was no automatic approval
