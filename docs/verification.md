@@ -1,5 +1,10 @@
 # Verification
 
+Current resumption and corrected demo/canonical routing evidence:
+[`resumption-2026-10-20.md`](resumption-2026-10-20.md). The following is the
+historical October 19 report; its requirement to import the original PDF is
+superseded by the user's native-UI-only instruction.
+
 Verified in the selected cloud environment on 2026-10-19 with Node 24.19.0 and installed Chromium. **33 focused checks pass.** Original artwork/approved mockup pixels are still unavailable and their transfer approval remains pending, so visual fidelity is not accepted.
 
 | Check                     | Result                                                                                                                                               |

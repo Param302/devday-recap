@@ -1,5 +1,7 @@
 # You Were Here
 
+**Current direction (2026-10-20):** The PDF and approved mockups are visual references only. Reproduce the poster as native UI; do not commit, deploy, embed, or provide the original files for download. The previous instructions below to import the original PDF are superseded. Publication is authorized with the title **DevDay Delhi NCR recap**, slug **dddrecap**, and the default/private audience. Exact visual verification and supported Sites packaging remain incomplete; see `docs/resumption-2026-10-20.md`.
+
 A DevDay Community DelhiNCR signature tent card. React + TypeScript + Vite, self-hosted handwriting fonts, and DOM/CSS rotation about the top binding. No heavy 3D runtime.
 
 **Status: implementation in progress, not ready for public release.** The exact PDF and approval mockups resolve in Library, but this execution environment's proxy refuses their download hosts (HTTP 403). The UI explicitly shows the unavailable artwork instead of recreating it. No original attendee signatures have been imported. A D1 application backend is implemented and locally tested; the official Sites runtime/auth helper is integrated and locally verified. Artwork and hosted provisioning remain pending.

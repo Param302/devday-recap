@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-  title: "You Were Here · DevDay DelhiNCR",
+  title: "DevDay Delhi NCR recap",
   description: "A shared signature tent card for DevDay Community DelhiNCR.",
 };
 export default function RootLayout({
